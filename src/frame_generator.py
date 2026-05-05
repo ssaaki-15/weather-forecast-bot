@@ -57,16 +57,24 @@ def _hex_to_rgba(hex_color: str, alpha: int = 255) -> tuple:
 # 背景グラデーション
 # ============================================================
 def _make_gradient_bg(W: int, H: int) -> Image.Image:
-    img = Image.new("RGB", (W, H))
-    draw = ImageDraw.Draw(img)
-    top = _hex_to_rgb(COLORS["bg_top"])
-    bot = _hex_to_rgb(COLORS["bg_bottom"])
+    img = Image.new("RGB", (W, H), (255, 255, 255))
+    return img
+
+
+def _draw_right_panel(img: Image.Image, rx: int, W: int, H: int) -> Image.Image:
+    """右パネルに薄いスカイブルーのグラデーション背景を描画"""
+    panel = Image.new("RGBA", img.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(panel)
+    top = (210, 235, 255)   # 薄い空色
+    bot = (235, 248, 255)   # ほぼ白
     for y in range(H):
         r = int(top[0] + (bot[0] - top[0]) * y / H)
         g = int(top[1] + (bot[1] - top[1]) * y / H)
         b = int(top[2] + (bot[2] - top[2]) * y / H)
-        draw.line([(0, y), (W, y)], fill=(r, g, b))
-    return img
+        draw.line([(rx, y), (W, y)], fill=(r, g, b, 255))
+    base = img.convert("RGBA")
+    base = Image.alpha_composite(base, panel)
+    return base.convert("RGB")
 
 
 # ============================================================
@@ -87,12 +95,12 @@ def _paste_presenter(img: Image.Image, W: int, H: int, presenter_w: int) -> Imag
             left = (new_w - presenter_w) // 2
             char = char.crop((left, 0, left + presenter_w, H))
         
-        # 右端にグラデーションフェード（境界を自然に）
+        # 右端にグラデーションフェードアウト（右へいくほど透明に）
         fade = Image.new("L", char.size, 255)
         fade_draw = ImageDraw.Draw(fade)
-        fade_w = 120
+        fade_w = 200
         for x in range(fade_w):
-            alpha = int(255 * x / fade_w)
+            alpha = int(255 * (fade_w - x) / fade_w)  # 255→0 にフェードアウト
             fade_draw.line([(char.width - fade_w + x, 0),
                             (char.width - fade_w + x, H)], fill=alpha)
         char.putalpha(fade)
@@ -163,12 +171,15 @@ def generate_title_frame(dt: datetime, output_path: Path) -> Path:
     W, H = VIDEO_CONFIG["width"], VIDEO_CONFIG["height"]
     img = _make_gradient_bg(W, H)
 
-    # キャラクター（左40%）
-    CHAR_W = int(W * 0.42)
+    # キャラクター（左42%）
+    CHAR_W = int(W * 0.44)
     img = _paste_presenter(img, W, H, CHAR_W)
 
-    # 右側コンテンツエリア
-    RX = CHAR_W + 20
+    # 右パネル背景（人物の右端から十分な余白を確保）
+    RX = CHAR_W + 60
+    img = _draw_right_panel(img, RX, W, H)
+
+    # 右側コンテンツカード
     img = _draw_glass_card(img, (RX, 80, W - 50, H - 80),
                            radius=32, alpha=230, border_color=COLORS["border"])
     draw = ImageDraw.Draw(img)
@@ -205,15 +216,16 @@ def generate_region_frame(region: dict, dt: datetime, output_path: Path) -> Path
     W, H = VIDEO_CONFIG["width"], VIDEO_CONFIG["height"]
     img = _make_gradient_bg(W, H)
 
-    CHAR_W = int(W * 0.38)
+    CHAR_W = int(W * 0.42)
     img = _paste_presenter(img, W, H, CHAR_W)
+
+    RX = CHAR_W + 60
+    img = _draw_right_panel(img, RX, W, H)
 
     today    = region.get("today", {})
     tomorrow = region.get("tomorrow", {})
     warnings = region.get("warnings", [])
     weekly   = region.get("weekly", [])
-
-    RX = CHAR_W + 15
     font_region = _find_font(48, bold=True)
     font_label  = _find_font(24)
     font_body   = _find_font(36, bold=True)
@@ -320,10 +332,12 @@ def generate_outro_frame(dt: datetime, warnings_summary: list, output_path: Path
     W, H = VIDEO_CONFIG["width"], VIDEO_CONFIG["height"]
     img = _make_gradient_bg(W, H)
 
-    CHAR_W = int(W * 0.42)
+    CHAR_W = int(W * 0.44)
     img = _paste_presenter(img, W, H, CHAR_W)
 
-    RX = CHAR_W + 20
+    RX = CHAR_W + 60
+    img = _draw_right_panel(img, RX, W, H)
+
     img = _draw_glass_card(img, (RX, 100, W-50, H-100),
                            radius=32, alpha=230, border_color=COLORS["border"])
     draw = ImageDraw.Draw(img)
