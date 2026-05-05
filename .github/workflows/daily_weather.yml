@@ -34,7 +34,7 @@ jobs:
     # ============================================================
     services:
       voicevox:
-        image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+        image: voicevox/voicevox_engine:cpu-ubuntu22.04-latest
         ports:
           - 50021:50021
         options: >-
