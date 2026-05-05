@@ -78,17 +78,25 @@ VIDEO_CONFIG = {
 
 # 動画カラーパレット（NHK風シックな配色）
 COLORS = {
-    "bg_primary":     "#0D1B2A",   # 濃紺（背景）
-    "bg_card":        "#1A2F45",   # カード背景
-    "accent_blue":    "#1E90FF",   # アクセントブルー
-    "accent_yellow":  "#FFD700",   # アクセントゴールド
-    "text_primary":   "#FFFFFF",   # 主テキスト
-    "text_secondary": "#B0C4DE",   # 副テキスト
-    "warning_red":    "#FF4500",   # 警報色
-    "caution_orange": "#FF8C00",   # 注意報色
-    "temp_hot":       "#FF6B6B",   # 高温色
-    "temp_cold":      "#87CEEB",   # 低温色
-    "border":         "#2A4A6B",   # ボーダー色
+    # ライト系グラスモーフィズム配色
+    "bg_top":           "#A8D4FF",   # 上部グラデーション（空色）
+    "bg_bottom":        "#EEF6FF",   # 下部グラデーション（白に近い）
+    "bg_primary":       "#C8E6FF",   # 背景ベース
+    "bg_card":          "#F0F8FF",   # カード背景（ほぼ白）
+    "bg_card_glass":    "#FFFFFF",   # グラスカード（純白）
+    "accent_blue":      "#3A7FD5",   # アクセントブルー
+    "accent_yellow":    "#FFB800",   # アクセントゴールド
+    "accent_gradient1": "#4A90E8",   # グラデーション開始
+    "accent_gradient2": "#6AB0F5",   # グラデーション終了
+    "text_primary":     "#1A2F5A",   # 主テキスト（濃紺）
+    "text_secondary":   "#5A7BA0",   # 副テキスト（中間ブルー）
+    "text_white":       "#FFFFFF",   # 白テキスト
+    "warning_red":      "#E03030",   # 警報色
+    "caution_orange":   "#FF8C00",   # 注意報色
+    "temp_hot":         "#E05050",   # 高温色
+    "temp_cold":        "#3A7FD5",   # 低温色
+    "border":           "#C0D8F5",   # ボーダー色（薄青）
+    "shadow":           "#B0CCEE",   # シャドウ色
 }
 
 # フォント設定（Noto Sans JPを使用）
