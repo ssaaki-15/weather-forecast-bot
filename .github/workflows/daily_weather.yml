@@ -32,18 +32,6 @@ jobs:
     # ============================================================
     # VOICEVOX Engine をサービスコンテナとして起動
     # ============================================================
-    services:
-      voicevox:
-        image: voicevox/voicevox_engine:cpu-ubuntu22.04-latest
-        ports:
-          - 50021:50021
-        options: >-
-          --health-cmd "curl -sf http://localhost:50021/version"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 12
-          --health-start-period 30s
-
     steps:
       # ---- チェックアウト ----
       - name: 📥 コードをチェックアウト
