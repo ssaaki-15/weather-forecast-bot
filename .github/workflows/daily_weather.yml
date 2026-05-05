@@ -1,0 +1,119 @@
+name: 🌤 天気予報自動配信（毎朝7時）
+
+# ============================================================
+# トリガー設定
+# ============================================================
+on:
+  schedule:
+    # 毎日 22:00 UTC = 翌日 07:00 JST
+    - cron: '0 22 * * *'
+
+  # 手動実行（テスト・緊急用）
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run（YouTubeアップロードをスキップ）'
+        required: false
+        type: boolean
+        default: false
+
+# ============================================================
+# 権限設定
+# ============================================================
+permissions:
+  contents: read
+
+jobs:
+  generate-and-upload:
+    name: 天気予報動画 生成・配信
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    # ============================================================
+    # VOICEVOX Engine をサービスコンテナとして起動
+    # ============================================================
+    services:
+      voicevox:
+        image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+        ports:
+          - 50021:50021
+        options: >-
+          --health-cmd "curl -sf http://localhost:50021/version"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 12
+          --health-start-period 30s
+
+    steps:
+      # ---- チェックアウト ----
+      - name: 📥 コードをチェックアウト
+        uses: actions/checkout@v4
+
+      # ---- Python 環境 ----
+      - name: 🐍 Python 3.11 セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      # ---- システム依存ライブラリ ----
+      - name: 📦 システムライブラリをインストール
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y \
+            ffmpeg \
+            fonts-noto-cjk \
+            curl
+          echo "FFmpeg version: $(ffmpeg -version | head -1)"
+          echo "フォント確認:"
+          fc-list | grep -i noto | head -5
+
+      # ---- Python パッケージ ----
+      - name: 📦 Python パッケージをインストール
+        run: pip install -r requirements.txt
+
+      # ---- VOICEVOX 起動確認 ----
+      - name: 🎙 VOICEVOX 起動確認
+        run: |
+          echo "VOICEVOX バージョン確認..."
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:50021/version; then
+              echo "✅ VOICEVOX 起動確認"
+              break
+            fi
+            echo "待機中... ($i/30)"
+            sleep 5
+          done
+
+      # ---- BGMファイル確認 ----
+      - name: 🎵 アセット確認
+        run: |
+          ls -la assets/ || echo "assetsディレクトリが空です（BGMなしで実行）"
+
+      # ---- メイン実行 ----
+      - name: 🌤 天気予報動画 生成・配信
+        env:
+          ANTHROPIC_API_KEY:      ${{ secrets.ANTHROPIC_API_KEY }}
+          YOUTUBE_CLIENT_ID:      ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET:  ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN:  ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+        run: python main.py
+
+      # ---- 成果物の保存（7日間）----
+      - name: 💾 動画・ログをアーティファクトとして保存
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: weather-forecast-${{ github.run_id }}
+          path: |
+            output/
+            weather_bot.log
+          retention-days: 7
+
+      # ---- 失敗時の通知（オプション）----
+      - name: ❌ 失敗通知
+        if: failure()
+        run: |
+          echo "::error::天気予報システムでエラーが発生しました。ログを確認してください。"
+          cat weather_bot.log || true

@@ -1,0 +1,16 @@
+# 天気予報自動配信システム — Python依存パッケージ
+# インストール: pip install -r requirements.txt
+
+# ---- Claude API（原稿生成） ----
+anthropic>=0.40.0
+
+# ---- 画像処理（フレーム生成） ----
+Pillow>=10.0.0
+
+# ---- ユーティリティ ----
+python-dotenv>=1.0.0    # ローカル開発用 .env 読み込み
+
+# ---- 注意 ----
+# VOICEVOX: ローカル/Docker実行のためPythonパッケージ不要（HTTP APIで呼び出し）
+# FFmpeg:   OS側でインストール（GitHub Actions では apt で導入）
+# YouTube:  Python標準ライブラリ（urllib）を使用（追加パッケージ不要）

@@ -1,0 +1,21 @@
+# 秘密情報
+.env
+.youtube_tokens.json
+
+# 生成物（Gitには含めない）
+output/
+weather_bot.log
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# macOS
+.DS_Store
